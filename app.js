@@ -47,59 +47,58 @@
 // }
 
 //..........................................done by me................................................................
-//first we declare the variables  
-const apiKey = '59185fe37add6c8acc84396e14ca9eab';    
-
-let weather;
-//to get the location using the geolocation...the first step
+//first we declare the variables
+const apiKey = '59185fe37add6c8acc84396e14ca9eab';
+let input = document.querySelector('input');
 
 
-const getLocation = () => {navigator.geolocation.getCurrentPosition(onSuccess, onError)};
-
-//2nd step to define function if the user denies the location...it finds message key inside the object in api incase of error.
-const onError = (error) => {
-  console.log('onError function', error);
-  const {
-    message
-  } = error;
-  var notification = document.querySelector('.notification');
-  notification.innerHTML = message;
-  notification.style.display = 'block';
-}
-//3rd step is in case of success....access the keys of the objects of the api 
-const onSuccess = (position) =>{ 
-  console.log('Onsuccess function ', position );
-  latitude = position.coords.latitude;
-  longitude = position.coords.longitude;
-  const url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${apiKey}`
+const toGetValue = (position) => {
+  position.preventDefault()
+  const randomCity = document.querySelector('input').value;
+  const cityLowerCase = randomCity.toLowerCase();
+  const cityName = cityLowerCase.charAt(0).toUpperCase() + cityLowerCase.slice(1);
+  
+  const url = `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=${apiKey}`
   console.log(url);
 
   fetch(url)
     .then(function (response) {
-      console.log('latest',response);
+      console.log('fetch URL', response);
+
       return response.json();
     })
-    .then((weather) => {
-          weatherToCallOnResponse(weather);
-          console.log('res', weather);
-          })
+    .then(function weatherToCallOnResponse(weatherInfo) {
+      console.log('weatherInfo', weatherInfo);
+      
+        let tempL = document.querySelector('.temperature-value p span:nth-child(1)');
+        let icon = document.querySelector('.weather-icon img');
+        let tempDescription = document.querySelector('.temperature-description p');
+        let location = document.querySelector('.location p');
+
+        tempL.innerHTML = '';
+        icon.src = `icons/unknown.png`;
+        location.innerHTML = "City name invalid";
+
+
+        if (weatherInfo.name === cityName) {
+          tempL.innerHTML = (weatherInfo.main.temp - 273.15).toFixed(2);
+          let iconId = weatherInfo.weather[0].icon;
+          icon.src = `icons/${iconId}.png`;
+          tempDescription.innerHTML = weatherInfo.weather[0].description;
+          location.innerHTML = weatherInfo.name;
+
+        } else {
+          tempDescription.innerHTML = `error ${weatherInfo.cod} &
+          ${weatherInfo.message}`
+
+
+        }
+      }
+      )
     }
 
 
-// step 4 ...we created this to pass it to the fetch function after getting data in json format
-const weatherToCallOnResponse = (weatherInfo) => {
-  let temp = document.querySelector('.temperature-value p span:nth-child(1)');
-  let icon = document.querySelector('.weather-icon img');
-  let tempDescription = document.querySelector('.temperature-description p');
-  let location = document.querySelector('.location p');
-  temp.innerHTML = (weatherInfo.main.temp - 273.15).toFixed(2);
-  let iconId = weatherInfo.weather[0].icon;
-  icon.src = `icons/${iconId}.png`;
-  tempDescription.innerHTML = weatherInfo.weather[0].description;
-  location.innerHTML = weatherInfo.name;
-  
-  } 
-getLocation();
 
 
 
+input.addEventListener('keyup', toGetValue);
